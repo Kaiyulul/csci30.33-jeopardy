@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> Botched Jeopardy </title>
+    <style> 
+        body {
+            font-family: "Gill Sans", sans-serif;
+            /* background: #212121; */
+            color: white;
+            font-size: 2vw;
+            text-align: center;
+            padding: 1em;
+            background: linear-gradient(90deg, #212121 0%, #1c1e29 100%);
+        }
+
+        header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: yellow;
+        }
+
+        .table {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            border-collapse: collapse;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .table-row {
+            display: flex;
+        }
+
+        .table-header-cell {
+            flex: 1;
+            color: whitesmoke;
+            padding: 10px;
+            text-transform: capitalize;
+            font-size: 1.5em;
+            font-weight: bold;
+            text-align: center;
+            background: blue;
+            margin: 0.5em;
+            height: 3em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .table-cell {
+            flex: 1;
+            color: yellow;
+            padding: 10px;
+            font-size: 2vw;
+            background: blue;
+            margin: 0.5em;
+            height: 3em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: space-between;
+            color: white;
+        }
+
+        .score-count {
+            color: yellow;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>Botched Jeopardy</h1>
+    </header>
+    <div id = "jeopardy-table"></div>
+    <footer class ="footer">
+        <p><input value = "Input answer here"></input> </p>
+        <p class="score"> Score <span class="score-count"> X </span></p>
+    </footer>
+</body>
+<script>
+    console.log("Commented the previous tiers. Couldn't figure out how to group them properly.")
+    // fetch('http://jservice.io/api/categories?count=5')
+    //     .then(response => response.json())
+    //     .then(categories => {
+    //         categories.forEach(category => {
+    //         fetch(`http://jservice.io/api/clues?category=${category.id}`)
+    //             .then(response => response.json())
+    //             .then(clues => {
+    //                 console.group(`Category: ${category.title}`);
+    //                 clues
+    //                     .filter(clue => clue.value === 100)
+    //                     .forEach(clue => console.log(`Value: ${clue.value} | ${clue.question}`));
+    //                 clues
+    //                     .filter(clue => clue.value === 200)
+    //                     .forEach(clue => console.log(`Value: ${clue.value} | ${clue.question}`));
+    //                 clues
+    //                     .filter(clue => clue.value === 300)
+    //                     .forEach(clue => console.log(`Value: ${clue.value} | ${clue.question}`));
+    //                 clues
+    //                     .filter(clue => clue.value === 400)
+    //                     .forEach(clue => console.log(`Value: ${clue.value} | ${clue.question}`));
+    //                 clues
+    //                     .filter(clue => clue.value === 500)
+    //                     .forEach(clue => console.log(`Value: ${clue.value} | ${clue.question}`));
+    //                 console.groupEnd();
+    //             });
+    //         });
+    //     });
+
+    // fetch('http://jservice.io/api/categories?count=5')
+    //     .then(response => response.json())
+    //     .then(categories => {
+    //         categories.forEach(category => {
+    //         fetch(`http://jservice.io/api/clues?category=${category.id}`)
+    //             .then(response => response.json())
+    //             .then(clues => {
+    //                 [100, 200, 300, 400, 500].forEach(value => {
+    //                 console.group(`Value: ${value}`);
+    //                 clues
+    //                     .filter(clue => clue.value === value)
+    //                     .forEach(clue => console.log(`Value: ${clue.value} | ${clue.question}`));
+    //                 console.groupEnd();
+    //             });
+    //         });
+    //     });
+    // });
+
+    fetch('http://jservice.io/api/categories?count=5')
+        .then(response => response.json())
+        .then(categories => {
+            categories.forEach(category => {
+            fetch(`http://jservice.io/api/clues?category=${category.id}`)
+                .then(response => response.json())
+                .then(clues => {
+                    const groups = {};
+                    clues.forEach(clue => {
+                    const airdate = clue.airdate;
+                    if (!groups[airdate]) {
+                        groups[airdate] = [];
+                    }
+                    groups[airdate].push(clue);
+                    });
+                    for (const [airdate, group] of Object.entries(groups)) {
+                        console.group(`Airdate: ${airdate}`);
+                        group.forEach(clue => console.log(clue.question));
+                        console.groupEnd();
+                    }
+                });
+            });
+        });
+</script>
+</html>
