@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> Botched Jeopardy </title>
+    <style> 
+        body {
+            font-family: "Gill Sans", sans-serif;
+            /* background: #212121; */
+            color: white;
+            font-size: 2vw;
+            text-align: center;
+            padding: 1em;
+            background: linear-gradient(90deg, #212121 0%, #171a2e 100%);
+        }
+
+        header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: yellow;
+        }
+
+        .table {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            border-collapse: collapse;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .table-row {
+            display: flex;
+        }
+
+        .table-header-cell {
+            flex: 1;
+            color: whitesmoke;
+            padding: 10px;
+            text-transform: capitalize;
+            font-size: 1.5em;
+            font-weight: bold;
+            text-align: center;
+            background: blue;
+            margin: 0.5em;
+            height: 3em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .table-cell {
+            flex: 1;
+            color: yellow;
+            padding: 10px;
+            font-size: 2vw;
+            background: blue;
+            margin: 0.5em;
+            height: 3em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        footer {
+            display: flex;
+            justify-content: right;
+            align-items: right;
+            color: white;
+        }
+
+        .score-count {
+            color: yellow;
+        }
+
+        .hidden {
+            display: none;
+            /* pointer-events: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5); */
+        }
+
+        .visible {
+            display: block;
+        }
+
+        .panel {
+            z-index: 9999;
+            position: fixed;
+            align-items: center;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: blue;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .clue-prompt {
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .clear {
+            opacity: 0;
+            flex: 1;
+            padding: 10px;
+            margin: 0.5em;
+            height: 3em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>Botched Jeopardy</h1>
+    </header>
+    <div id ="hidden-panel" class="hidden panel">
+        <form id="answer-form">
+            <h2 class="clue-prompt"></h2>
+            <input type="text" id="answer-input" placeholder="Place answer here!">
+            <button type="submit" id="submit=button"> Submit </button>
+        </form>
+    </div>
+    <div id="jeopardy-table"></div>
+    <footer class ="footer">
+        <p class="score"> Score <span id="scoreSpan" class="score-count"> 0 </span></p>
+    </footer>
+</body>
+<script>
+    var categoriesObjects = [];
+    var tableMatrix = [];
+    var scoreTotal = 0;
+    var dataCount = 0;
+
+    async function getCategories(count) {
+        const response = await fetch(`http://jservice.io/api/categories?count=${count}`);
+        const data = await response.json().then(data => {
+            var categoryIDs = data.map(category => category.id);
+            console.log(categoryIDs);
+            // console.log(typeof categoryIDs)
+            randomCategories(categoryIDs)
+        })
+    }
+
+    async function fetchData(id) {
+        let url = `http://jservice.io/api/category?id=${id}`;
+        try {
+            const response = await fetch(url);
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    async function randomCategories(data) {
+        var categories = [];
+        // shuffles category IDs
+        const shuffleData = data.sort(() => Math.random() - 0.5);
+        categories = shuffleData.slice(0, 5);
+
+        Promise.all(categories.map(async id => {
+            const data = await fetchData(id);
+            handleData(data);
+        }));
+    }
+
+    async function handleData(data) {
+        // console.log(data.title);
+        // // can set Jeopardy question values per row here
+        // // do note that not all categories may have questiosn with these values
+        // const dataFilter1 = data.clues.filter(obj => obj.value === 100)
+        // const dataFilter2 = data.clues.filter(obj => obj.value === 200)
+        // const dataFilter3 = data.clues.filter(obj => obj.value === 300)
+        // const dataFilter4 = data.clues.filter(obj => obj.value === 400)
+        // const dataFilter5 = data.clues.filter(obj => obj.value === 500)
+        // const dataFilters = [dataFilter1, dataFilter2, dataFilter3, dataFilter4, dataFilter5]
+
+        // console.log(data.title);
+        // const clueData = dataFilters.map(array => {
+        //     // console.log(array.length);
+        //     // if (array.length > 0) {
+        //     //     const index = Math.floor(Math.random * array.length);
+        //     //     console.log(array[index])
+        //     //     return array[index];
+        //     // }
+        //     return array[1];
+        // });
+
+        let clueData = data.clues.sort(() => Math.random() - 0.5);
+        data.clues = clueData.slice(0, 5).filter(clue => clue && clue.value).sort((a, b) => a.value - b.value);
+        categoriesObjects.push(data);
+        dataCount++;
+        // rendersTable once data has been processed
+        if (dataCount == 5) {
+            // console.log("teehee")
+            console.log(categoriesObjects)
+            renderTable()
+        }
+    }
+
+    async function renderTable() {
+        // create 2D array for Table
+        for (let i = 0; i < 6; i++) {
+            const rows = [];
+            for (let j = 0; j < 5; j++) {
+                rows.push({object: null});
+            }
+            tableMatrix.push(rows);
+        }
+
+        console.log(categoriesObjects)
+
+        // format tableMatrix
+        var temp = 0;
+        categoriesObjects.forEach(category => {
+            tableMatrix[0][temp] = category.title;
+            tableMatrix[1][temp] = category.clues[0];
+            tableMatrix[2][temp] = category.clues[1];
+            tableMatrix[3][temp] = category.clues[2];
+            tableMatrix[4][temp] = category.clues[3];
+            tableMatrix[5][temp] = category.clues[4];
+            temp++;
+        });
+
+        console.log(tableMatrix);
+
+        const tableContainer = document.createElement('div');
+        tableContainer.classList.add('table');
+        for (let i = 0; i < tableMatrix.length; i++) {
+            const row = document.createElement('div');
+            row.classList.add(`table-row`);
+            row.id = `${i}`
+            for (let j = 0; j < tableMatrix[i].length; j++) {
+                const cell = document.createElement('div');
+                if (i == 0) {
+                    cell.classList.add('table-header-cell');
+                    cell.textContent = tableMatrix[i][j];
+                } else {
+                    cell.classList.add('table-cell'); 
+                    cell.id = `${i}${j}`; 
+                    try {
+                        cell.textContent = `\$${tableMatrix[i][j].value}`;
+                        cell.addEventListener('click', function() {
+                            handleCellClick(this, i, j);
+                    }, { once: true });
+                    } catch(error) {
+                        console.error(error);
+                        console.log(`Row: ${i}, Column: ${j}`)
+                        console.log("Reload the site")
+                    }
+                }
+                row.appendChild(cell);
+            }
+            tableContainer.appendChild(row);
+        }
+
+        const container = document.getElementById("jeopardy-table");
+        container.appendChild(tableContainer);
+    }
+    
+    function handleCellClick(cell, row, column) {
+        console.log(tableMatrix[row][column]);
+        const hiddenPanel = document.getElementById('hidden-panel');
+        const clueElement = hiddenPanel.querySelector('.clue-prompt');
+        const scoreSpan = document.getElementById('scoreSpan');
+        const answerForm = hiddenPanel.querySelector('#answer-form');
+        const answerInput = hiddenPanel.querySelector('#answer-input');
+
+        clueElement.textContent = tableMatrix[row][column].question;
+
+        answerForm.addEventListener('submit', function(event) {
+            event.preventDefault()
+            const userAnswer = answerInput.value;
+            const correctAnswer = tableMatrix[row][column].answer;
+
+            if (userAnswer === correctAnswer) {
+                console.log('Correct answer!');
+                scoreTotal += tableMatrix[row][column].value;
+                // console.log(scoreTotal);
+                scoreSpan.textContent = `${scoreTotal}`;
+                hiddenPanel.classList.remove('reveal');
+                hiddenPanel.classList.add('hidden');
+                updateTable(cell, row, column);
+            } else {
+                console.log('Incorrect answer :(');
+                hiddenPanel.classList.remove('reveal');
+                hiddenPanel.classList.add('hidden');
+                updateTable(cell, row, column);
+            }
+        }, { once: true });
+
+        hiddenPanel.classList.remove('hidden');
+        hiddenPanel.classList.add('reveal');
+    }
+
+    function updateTable(cell, row, column) {
+        // const cellElement = document.getElementById(`${row}${column}`);
+        cell.parentNode.replaceChild(cell.cloneNode(true), cell).classList.add('clear');
+        document.getElementById(`${row}${column}`).replaceWith(cell);
+    }
+
+    // change count for more variety
+    getCategories(45);
+</script>
+</html>
